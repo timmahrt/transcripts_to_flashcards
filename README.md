@@ -11,4 +11,6 @@ Before or after watching a video you can review the video transcripts and study 
 
 `python run.pry`
 
-<img href="./example_screenshot.png" width="600px">
+## Screenshot
+
+<img src="./example_screenshot.png" width="600px">
