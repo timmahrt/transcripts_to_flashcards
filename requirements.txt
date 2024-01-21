@@ -1,0 +1,6 @@
+
+Flask==3.0.1
+SudachiPy==0.6.8
+SudachiDict-core==20240109
+youtube-transcript-api==0.6.2
+pytube==15.0.0

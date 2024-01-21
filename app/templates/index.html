@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube Transcripts</title>
+</head>
+
+<body>
+    <div class="container">
+        <form method="post" action="/">
+            <div class="project-description">
+                This application is a tool for studying listening in Japanese with youtube.
+
+                Review the transcripts of a
+                video and study vocabulary used in the video, in context.
+            </div>
+            <label for="user_input">Enter a youtube url:</label>
+            <input type="text" id="url" name="url">
+            <button type="submit">Submit</button>
+            <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+        </form>
+        {% if url %}
+
+        {% if title %}
+        <h1>Title: {{ title }}</h1>
+        {% endif %}
+
+        {% if author %}
+        <p>Author: {{ author }}</p>
+        {% endif %}
+        <p>URL: {{ url }}</p>
+
+        {% if error %}
+
+        <div class="transcript-loading-error">
+            {{ error }}
+        </div>
+
+        {% else %}
+
+        <button id="section-button-transcript" class="section-button" onclick="activateMainSection('transcript')"
+            data-target-section="main-section-transcript">
+            Transcript
+        </button>
+        <button id="section-button-vocabulary" class="section-button" onclick="activateMainSection('vocabulary')"
+            data-target-section="main-section-vocabulary">
+            Vocabulary
+        </button>
+
+        {% if tokens_by_pos %}
+        <div id="main-section-transcript" class="main-section main-section">
+            <h2 id="transcript-heading">Transcript</h2>
+            <div id="transcript" class="video__transcript">
+                {% for line in transcripts %}
+                <div class="video__transcript">{{ line }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="main-section-vocabulary" class="main-section">
+            <h2 id="vocabulary-heading">Vocabulary</h2>
+            {% for pos, tokens in tokens_by_pos.items() %}
+            <button id="transcript-button-{{ pos }}" onclick="activateVocabSection('{{ pos }}')"
+                class="part-of-speech-button part-of-speech-button--{{ pos }}"
+                data-target-section="vocabulary-{{ pos }}">
+                {{ pos }}({{ tokens|length }})
+            </button>
+            {% endfor %}
+
+            <div id="vocabulary">
+                {% for pos, tokens in tokens_by_pos.items() %}
+                <div id="vocabulary-{{ pos }}" class="vocabulary-section">
+                    <h3>{{ pos }}</h3>
+                    <ul>
+                        {% for token in tokens %}
+                        <li>{{ token.surface() }}({{ token.reading_form() }})</li>
+                        {% for context in contexts_by_pairs[(pos, token)] %}
+                        <span class="video__context">{{ context }}</span>
+                        {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% endif %}
+        {% endif %}
+        {% endif %}
+    </div>
+    <script>
+        function activateMainSection(sectionId) {
+            document.querySelectorAll('.main-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.querySelectorAll('.section-button').forEach(button => {
+                setButton(button, false);
+            })
+
+            const clickedButton = document.getElementById(`section-button-${sectionId}`);
+            const targetSectionId = clickedButton.dataset.targetSection;
+            const targetSection = document.getElementById(targetSectionId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+            setButton(clickedButton, true)
+        }
+
+        function activateVocabSection(pos) {
+            // Hide all sections
+            document.querySelectorAll('.vocabulary-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.querySelectorAll('.part-of-speech-button').forEach(button => {
+                setButton(button, false);
+            })
+
+            // Show the selected section
+            const clickedButton = document.getElementById(`transcript-button-${pos}`);
+            const targetSectionId = clickedButton.dataset.targetSection;
+            const targetSection = document.getElementById(targetSectionId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+            setButton(clickedButton, true)
+        }
+
+        function setStatus(sectionId, enable) {
+            const section = document.getElementById(sectionId);
+            const heading = document.getElementById(sectionId + '-heading');
+            const button = document.getElementById(sectionId + '-button');
+
+            setSection(section, heading, enable)
+            setButton(button, enable)
+        }
+
+        function setButton(button, enable) {
+            if (enable) {
+                button.classList.remove('transcript_button--unselected');
+            } else {
+                button.classList.add('transcript_button--unselected');
+            }
+        }
+
+        function setSection(section, heading, enable) {
+            const display = enable ? 'block' : 'none'
+
+            section.style.display = display;
+            heading.style.display = display;
+        }
+
+        function getAllAsArray(selector) {
+            return Array.from(
+                document.querySelectorAll(selector)
+            );
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // var sectionsToDisable = ['vocabulary'];
+            // sectionsToDisable.forEach(function (sectionId) {
+            //     setStatus(sectionId, 'disable');
+            // });
+
+            getAllAsArray('.section-button').slice(1).forEach((button) => {
+                setButton(button, false)
+            });
+
+            getAllAsArray('.main-section').slice(1).forEach(section => {
+                section.style.display = 'none';
+            });
+
+            getAllAsArray('.part-of-speech-button').slice(1).forEach((button) => {
+                setButton(button, false)
+            });
+
+            getAllAsArray('.vocabulary-section').slice(1).forEach(section => {
+                section.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+
+</html>
